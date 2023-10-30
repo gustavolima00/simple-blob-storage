@@ -1,4 +1,5 @@
 from flask import Flask, request, send_from_directory
+from models.object import Object
 import os
 import time
 
@@ -30,13 +31,15 @@ def list_files():
         else:
             continue
 
-        item_metadata = {
-            'name': item,
-            'type': item_type,
-            'size': os.path.getsize(item_path),
-            'last_modified': time.ctime(os.path.getmtime(item_path))
-        }
-        items.append(item_metadata)
+        key = os.path.join(path_prefix, item)
+        object_instance = Object(
+            name=item,
+            obj_type=item_type,
+            size=os.path.getsize(item_path),
+            last_modified=time.ctime(os.path.getmtime(item_path)),
+            key=key
+        )
+        items.append(object_instance.to_dict())
 
     return {'items': items}, 200
 
@@ -52,13 +55,23 @@ def upload_file(folder_path):
     create_folder_if_not_exist(full_folder_path)
     filepath = os.path.join(full_folder_path, file.filename)
     file.save(filepath)
-    return f'File {file.filename} uploaded successfully to {folder_path}', 200
+    key = os.path.join(folder_path, file.filename)
+    object_instance = Object(
+        name=file.filename,
+        obj_type='file',
+        size=os.path.getsize(filepath),
+        last_modified=time.ctime(os.path.getmtime(filepath)),
+        key=key
+    )
+    return object_instance.to_dict(), 200
 
 
-@app.route('/download/<path:file_path>', methods=['GET'])
-def download_file(file_path):
-    directory, filename = os.path.split(file_path)
-    return send_from_directory(os.path.join(BASE_UPLOAD_FOLDER, directory), filename)
+@app.route('/download/<path:key>', methods=['GET'])
+def download_file(key):
+    full_path = os.path.join(BASE_UPLOAD_FOLDER, key)
+    if not os.path.isfile(full_path):
+        return f'File {key} does not exist', 404
+    return send_from_directory(BASE_UPLOAD_FOLDER, key, as_attachment=True)
 
 
 if __name__ == '__main__':
