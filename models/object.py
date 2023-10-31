@@ -1,4 +1,4 @@
-class Object:
+class ObjectMetadata:
     def __init__(self, name, obj_type, size, last_modified, created_at, path):
         self.name = name
         self.type = obj_type

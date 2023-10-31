@@ -1,5 +1,5 @@
 from file_managers.base_file_manager import BaseFileManager
-from models.object import Object
+from models.object import ObjectMetadata
 import os
 import time
 
@@ -7,6 +7,23 @@ import time
 class LinuxFileManager(BaseFileManager):
     def make_directory(folder_path, exist_ok=True):
         os.makedirs(folder_path, exist_ok=exist_ok)
+
+    def get_object_metadata(path):
+        if os.path.isdir(path):
+            item_type = 'folder'
+        else:
+            item_type = 'file'
+
+        name = os.path.basename(path)
+
+        return ObjectMetadata(
+            name=name,
+            obj_type=item_type,
+            size=os.path.getsize(path),
+            last_modified=time.ctime(os.path.getmtime(path)),
+            created_at=time.ctime(os.path.getctime(path)),
+            path=path
+        )
 
     def list_files(path_prefix, show_files, show_folders):
         if os.path.isdir(path_prefix):
@@ -22,25 +39,19 @@ class LinuxFileManager(BaseFileManager):
         for item in os.listdir(directory):
             if not item.startswith(prefix):
                 continue
-            item_path = os.path.join(directory, item)
+            object_metadata = LinuxFileManager.get_object_metadata(
+                os.path.join(directory, item))
 
-            if os.path.isdir(item_path):
-                item_type = 'folder'
-            else:
-                item_type = 'file'
-
-            if item_type == 'file' and not show_files:
+            if object_metadata.type == 'file' and not show_files:
                 continue
-            if item_type == 'folder' and not show_folders:
+            if object_metadata.type == 'folder' and not show_folders:
                 continue
-
-            object_instance = Object(
-                name=item,
-                obj_type=item_type,
-                size=os.path.getsize(item_path),
-                last_modified=time.ctime(os.path.getmtime(item_path)),
-                created_at=time.ctime(os.path.getctime(item_path)),
-                path=item_path
-            )
-            items.append(object_instance.to_dict())
+            items.append(object_metadata.to_dict())
         return items
+
+    def save_file(path, file, create_folders):
+        if create_folders:
+            LinuxFileManager.make_directory(
+                os.path.dirname(path), exist_ok=True)
+        file.save(path)
+        return LinuxFileManager.get_object_metadata(path)

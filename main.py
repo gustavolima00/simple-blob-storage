@@ -1,5 +1,5 @@
 from flask import Flask, request, send_from_directory
-from models.object import Object
+from models.object import ObjectMetadata
 from services.file_manager_service import FileManagerService
 import os
 import time
@@ -8,37 +8,15 @@ app = Flask(__name__)
 BASE_UPLOAD_FOLDER = './uploads'
 FileManagerService.make_directory(BASE_UPLOAD_FOLDER, exist_ok=True)
 
+
 @app.route('/list', methods=['GET'])
 def list_files():
     path_prefix = request.args.get('path_prefix', '')
     list_files = request.args.get('files', 'true').lower() == 'true'
     list_folders = request.args.get('folders', 'true').lower() == 'true'
-
-    full_folder_path = os.path.join(BASE_UPLOAD_FOLDER, path_prefix)
-    if not os.path.isdir(full_folder_path):
-        return f'Folder {path_prefix} does not exist', 404
-
-    items = []
-    for item in os.listdir(full_folder_path):
-        item_path = os.path.join(full_folder_path, item)
-        if os.path.isdir(item_path) and list_folders:
-            item_type = 'folder'
-        elif os.path.isfile(item_path) and list_files:
-            item_type = 'file'
-        else:
-            continue
-
-        key = os.path.join(path_prefix, item)
-        object_instance = Object(
-            name=item,
-            obj_type=item_type,
-            size=os.path.getsize(item_path),
-            last_modified=time.ctime(os.path.getmtime(item_path)),
-            key=key
-        )
-        items.append(object_instance.to_dict())
-
-    return {'items': items}, 200
+    objects = FileManagerService.list_files(
+        path_prefix, list_files, list_folders)
+    return objects, 200
 
 
 @app.route('/upload/<path:folder_path>', methods=['POST'])
@@ -48,19 +26,10 @@ def upload_file(folder_path):
     file = request.files['file']
     if file.filename == '':
         return 'No selected file', 400
-    full_folder_path = os.path.join(BASE_UPLOAD_FOLDER, folder_path)
-    FileManagerService.make_directory(full_folder_path, exist_ok=True)
-    filepath = os.path.join(full_folder_path, file.filename)
-    file.save(filepath)
-    key = os.path.join(folder_path, file.filename)
-    object_instance = Object(
-        name=file.filename,
-        obj_type='file',
-        size=os.path.getsize(filepath),
-        last_modified=time.ctime(os.path.getmtime(filepath)),
-        key=key
-    )
-    return object_instance.to_dict(), 200
+    path = os.path.join(BASE_UPLOAD_FOLDER, folder_path)
+    file_metadata = FileManagerService.save_file(
+        path, file, create_folders=True)
+    return file_metadata, 200
 
 
 @app.route('/download/<path:key>', methods=['GET'])
