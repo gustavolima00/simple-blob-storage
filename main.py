@@ -1,15 +1,12 @@
 from flask import Flask, request, send_from_directory
 from models.object import Object
+from services.file_manager_service import FileManagerService
 import os
 import time
 
 app = Flask(__name__)
 BASE_UPLOAD_FOLDER = './uploads'
-os.makedirs(BASE_UPLOAD_FOLDER, exist_ok=True)
-
-
-def create_folder_if_not_exist(folder_path):
-    os.makedirs(folder_path, exist_ok=True)
+FileManagerService.make_directory(BASE_UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/list', methods=['GET'])
 def list_files():
@@ -52,7 +49,7 @@ def upload_file(folder_path):
     if file.filename == '':
         return 'No selected file', 400
     full_folder_path = os.path.join(BASE_UPLOAD_FOLDER, folder_path)
-    create_folder_if_not_exist(full_folder_path)
+    FileManagerService.make_directory(full_folder_path, exist_ok=True)
     filepath = os.path.join(full_folder_path, file.filename)
     file.save(filepath)
     key = os.path.join(folder_path, file.filename)
