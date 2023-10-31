@@ -1,6 +1,7 @@
 from flask import Flask, request, send_file
 from services.file_manager_service import FileManagerService, FileDoesNotExistException
 import io
+import os
 
 app = Flask(__name__)
 
@@ -23,7 +24,7 @@ def upload_file():
     file = request.files['file']
     if file.filename == '':
         return 'No selected file', 400
-    file_path = f'{folder_path}/{file.filename}'
+    file_path = os.path.join(folder_path, file.filename)
     file_content = file.read()
     file_metadata = FileManagerService.save_file(file_path, file_content)
     return file_metadata.to_dict(), 200
