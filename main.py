@@ -4,7 +4,6 @@ import io
 
 app = Flask(__name__)
 
-
 @app.route('/list', methods=['GET'])
 def list_files():
     path_prefix = request.args.get('path_prefix', '')
