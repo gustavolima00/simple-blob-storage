@@ -72,10 +72,20 @@ class LinuxFileManager(BaseFileManager):
             items.append(object_metadata)
         return items
 
-    def save_file(path, file, create_folders):
-        full_path = os.path.join(LinuxFileManager.__base_folder_path(), path)
+    def save_file(file_path, content, create_folders):
         if create_folders:
-            LinuxFileManager.make_directory(
-                os.path.dirname(full_path), exist_ok=True)
-        file.save(full_path)
-        return LinuxFileManager.get_object_metadata(path)
+            folder = os.path.dirname(file_path)
+            LinuxFileManager.make_directory(folder, exist_ok=True)
+        with open(os.path.join(LinuxFileManager.__base_folder_path(), file_path), 'wb') as file:
+            file.write(content)
+        return LinuxFileManager.get_object_metadata(file_path)
+
+    def get_file(filepath):
+        full_path = os.path.join(
+            LinuxFileManager.__base_folder_path(), filepath)
+        if not os.path.exists(full_path):
+            raise LinuxFileDoesNotExistException(full_path)
+        content = open(full_path, 'rb')
+        metadata = LinuxFileManager.get_object_metadata(filepath)
+
+        return content, metadata

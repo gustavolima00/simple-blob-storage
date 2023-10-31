@@ -16,5 +16,9 @@ class BaseFileManager(ABC):
         pass
 
     @abstractmethod
-    def write_file(filepath, content, create_folders):
+    def save_file(filepath, content, create_folders):
+        pass
+
+    @abstractmethod
+    def get_file(filepath):
         pass

@@ -19,5 +19,11 @@ class FileManagerService:
         except LinuxFileDoesNotExistException:
             raise FileDoesNotExistException(path)
 
-    def save_file(path, file, create_folders=True):
-        return LinuxFileManager.save_file(path, file, create_folders)
+    def save_file(file_path, content, create_folders=True):
+        return LinuxFileManager.save_file(file_path, content, create_folders)
+
+    def get_file(file_path):
+        try:
+            return LinuxFileManager.get_file(file_path)
+        except LinuxFileDoesNotExistException:
+            raise FileDoesNotExistException(file_path)

@@ -1,10 +1,8 @@
-from flask import Flask, request, send_from_directory
+from flask import Flask, request, send_file
 from services.file_manager_service import FileManagerService, FileDoesNotExistException
-import os
+import io
 
 app = Flask(__name__)
-BASE_UPLOAD_FOLDER = './uploads'
-FileManagerService.make_directory(BASE_UPLOAD_FOLDER, exist_ok=True)
 
 
 @app.route('/list', methods=['GET'])
@@ -18,23 +16,29 @@ def list_files():
     return response, 200
 
 
-@app.route('/upload/<path:folder_path>', methods=['POST'])
-def upload_file(folder_path):
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    folder_path = request.args.get('folder_path', '')
     if 'file' not in request.files:
         return 'No file part', 400
     file = request.files['file']
     if file.filename == '':
         return 'No selected file', 400
-    path = os.path.join(BASE_UPLOAD_FOLDER, folder_path)
-    file_metadata = FileManagerService.save_file(path, file, create_folders=True)
+    file_path = f'{folder_path}/{file.filename}'
+    file_content = file.read()
+    file_metadata = FileManagerService.save_file(file_path, file_content)
     return file_metadata.to_dict(), 200
 
 
-@app.route('/download/<path:file_path>', methods=['GET'])
-def download_file(file_path):
+@app.route('/get-file', methods=['GET'])
+def download_file():
+    file_path = request.args.get('file_path', '')
     try:
-        object_metadata = FileManagerService.get_object_metadata(file_path)
-        return send_from_directory(BASE_UPLOAD_FOLDER, object_metadata.path, as_attachment=True)
+        file_stream, metadata = FileManagerService.get_file(file_path)
+        file_content = file_stream.read()
+        file_bytes = io.BytesIO(file_content)
+
+        return send_file(file_bytes, download_name=metadata.name, as_attachment=True)
     except FileDoesNotExistException:
         return f'File {file_path} does not exist', 404
 
