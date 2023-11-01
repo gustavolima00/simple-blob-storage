@@ -8,7 +8,7 @@ class LinuxFileManagerException(Exception):
         super().__init__(message)
 
 
-class LinuxFileDoesNotExistException(LinuxFileManagerException):
+class FileDoesNotExistException(LinuxFileManagerException):
     def __init__(self, path):
         super().__init__(f'File {path} does not exist')
 
@@ -54,7 +54,7 @@ class LinuxFileManager:
     def get_object_metadata(path):
         full_path = os.path.join(LinuxFileManager.base_folder_path(), path)
         if not os.path.exists(full_path):
-            raise LinuxFileDoesNotExistException(full_path)
+            raise FileDoesNotExistException(full_path)
 
         if os.path.isdir(full_path):
             item_type = 'folder'
@@ -122,9 +122,9 @@ class LinuxFileManager:
         full_path = os.path.join(
             LinuxFileManager.base_folder_path(), filepath)
         if not os.path.exists(full_path):
-            raise LinuxFileDoesNotExistException(full_path)
+            raise FileDoesNotExistException(full_path)
         if not os.path.isfile(full_path):
-            raise LinuxFileDoesNotExistException(full_path)
+            raise FileDoesNotExistException(full_path)
         content = open(full_path, 'rb')
         metadata = LinuxFileManager.get_object_metadata(filepath)
 

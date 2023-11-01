@@ -1,4 +1,4 @@
-from file_managers.linux_file_manager import LinuxFileDoesNotExistException, LinuxFileManager
+from file_managers.linux_file_manager import FileDoesNotExistException, LinuxFileManager
 
 
 class FileDoesNotExistException(Exception):
@@ -16,7 +16,7 @@ class FileManagerService:
     def get_object_metadata(path):
         try:
             return LinuxFileManager.get_object_metadata(path)
-        except LinuxFileDoesNotExistException:
+        except FileDoesNotExistException:
             raise FileDoesNotExistException(path)
 
     def save_file(file_path, content, create_folders=True):
@@ -25,5 +25,5 @@ class FileManagerService:
     def get_file(file_path):
         try:
             return LinuxFileManager.get_file(file_path)
-        except LinuxFileDoesNotExistException:
+        except FileDoesNotExistException:
             raise FileDoesNotExistException(file_path)
