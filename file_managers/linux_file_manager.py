@@ -42,19 +42,19 @@ class LinuxFileManager:
         return base_folder_path
 
     @staticmethod
-    def make_directory(folder_path, exist_ok=True):
+    def make_directory(folder_path):
         if not LinuxFileManager.is_valid_directory_name(folder_path):
             raise InvalidDirectoryNameException(folder_path)
 
         full_path = os.path.join(
             LinuxFileManager.base_folder_path(), folder_path)
-        os.makedirs(full_path, exist_ok=exist_ok)
+        os.makedirs(full_path, exist_ok=True)
 
     @staticmethod
     def get_object_metadata(path):
         full_path = os.path.join(LinuxFileManager.base_folder_path(), path)
         if not os.path.exists(full_path):
-            raise FileDoesNotExistException(full_path)
+            raise FileDoesNotExistException(path)
 
         if os.path.isdir(full_path):
             item_type = 'folder'
@@ -109,7 +109,7 @@ class LinuxFileManager:
             raise InvalidFileNameException(file_name)
         if not LinuxFileManager.is_valid_directory_name(folder_path):
             raise InvalidDirectoryNameException(folder_path)
-        LinuxFileManager.make_directory(folder_path, exist_ok=True)
+        LinuxFileManager.make_directory(folder_path)
         file_path = os.path.join(folder_path, file_name)
         real_file_path = os.path.join(
             LinuxFileManager.base_folder_path(), file_path)
@@ -122,9 +122,9 @@ class LinuxFileManager:
         full_path = os.path.join(
             LinuxFileManager.base_folder_path(), filepath)
         if not os.path.exists(full_path):
-            raise FileDoesNotExistException(full_path)
+            raise FileDoesNotExistException(filepath)
         if not os.path.isfile(full_path):
-            raise FileDoesNotExistException(full_path)
+            raise FileDoesNotExistException(filepath)
         content = open(full_path, 'rb')
         metadata = LinuxFileManager.get_object_metadata(filepath)
 

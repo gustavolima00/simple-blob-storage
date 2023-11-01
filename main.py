@@ -1,9 +1,10 @@
 from flask import Flask, request, send_file
-from services.file_manager_service import FileManagerService, FileDoesNotExistException
+from services.file_manager_service import FileManagerService, FileManagerServiceException
 import io
 import os
 
 app = Flask(__name__)
+
 
 @app.route('/list', methods=['GET'])
 def list_files():
@@ -19,15 +20,19 @@ def list_files():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     folder_path = request.args.get('folder_path', '')
+    file_name = request.args.get('file_name', '')
     if 'file' not in request.files:
         return 'No file part', 400
     file = request.files['file']
-    if file.filename == '':
-        return 'No selected file', 400
-    file_path = os.path.join(folder_path, file.filename)
+    if file_name == '':
+        file_name = file.filename
     file_content = file.read()
-    file_metadata = FileManagerService.save_file(file_path, file_content)
-    return file_metadata.to_dict(), 200
+    try:
+        file_metadata = FileManagerService.save_file(
+            folder_path, file_name, file_content)
+        return file_metadata.to_dict(), 200
+    except FileManagerServiceException as e:
+        return str(e), 400
 
 
 @app.route('/get-file', methods=['GET'])
@@ -39,8 +44,8 @@ def download_file():
         file_bytes = io.BytesIO(file_content)
 
         return send_file(file_bytes, download_name=metadata.name, as_attachment=True)
-    except FileDoesNotExistException:
-        return f'File {file_path} does not exist', 404
+    except FileManagerServiceException as e:
+        return str(e), 400
 
 
 if __name__ == '__main__':
