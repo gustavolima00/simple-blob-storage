@@ -1,4 +1,3 @@
-from file_managers.base_file_manager import BaseFileManager
 from models.object_metadata import ObjectMetadata
 import os
 import time
@@ -14,10 +13,19 @@ class InvalidDirectoryNameException(Exception):
         super().__init__(f'Invalid directory name: {directory_name}')
 
 
-class LinuxFileManager(BaseFileManager):
+class InvalidFileNameException(Exception):
+    def __init__(self, file_name):
+        super().__init__(f'Invalid file name: {file_name}')
+
+
+class LinuxFileManager:
     @staticmethod
     def is_valid_directory_name(directory_name):
         return all(c.isalnum() or c in ('-', '_') for c in directory_name)
+
+    @staticmethod
+    def is_valid_file_name(file_name):
+        return all(c.isalnum() or c in ('-', '_', '.') for c in file_name)
 
     @staticmethod
     def base_folder_path():
@@ -89,20 +97,21 @@ class LinuxFileManager(BaseFileManager):
         return items
 
     @staticmethod
-    def save_file(file_path, content, create_folders):
-        folder = os.path.join(
+    def save_file(folder_path, file_name, content):
+        if not LinuxFileManager.is_valid_file_name(file_name):
+            raise InvalidFileNameException(file_name)
+        if not LinuxFileManager.is_valid_directory_name(folder_path):
+            raise InvalidDirectoryNameException(folder_path)
+
+        real_folder_path = os.path.join(
             LinuxFileManager.base_folder_path(),
-            os.path.dirname(file_path),
+            folder_path,
         )
-        file_name = os.path.basename(file_path)
-        real_file_path = os.path.join(folder, file_name)
-        file_path = os.path.relpath(
-            real_file_path, LinuxFileManager.base_folder_path())
-        if create_folders:
-            LinuxFileManager.make_directory(folder, exist_ok=True)
+        real_file_path = os.path.join(real_folder_path, file_name)
+        LinuxFileManager.make_directory(real_folder_path, exist_ok=True)
         with open(real_file_path, 'wb') as file:
             file.write(content)
-        return LinuxFileManager.get_object_metadata(file_path)
+        return LinuxFileManager.get_object_metadata(folder_path)
 
     @staticmethod
     def get_file(filepath):
