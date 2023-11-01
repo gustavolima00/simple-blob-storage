@@ -3,17 +3,22 @@ import os
 import time
 
 
-class LinuxFileDoesNotExistException(Exception):
+class LinuxFileManagerException(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
+class LinuxFileDoesNotExistException(LinuxFileManagerException):
     def __init__(self, path):
         super().__init__(f'File {path} does not exist')
 
 
-class InvalidDirectoryNameException(Exception):
+class InvalidDirectoryNameException(LinuxFileManagerException):
     def __init__(self, directory_name):
         super().__init__(f'Invalid directory name: {directory_name}')
 
 
-class InvalidFileNameException(Exception):
+class InvalidFileNameException(LinuxFileManagerException):
     def __init__(self, file_name):
         super().__init__(f'Invalid file name: {file_name}')
 
@@ -25,6 +30,8 @@ class LinuxFileManager:
 
     @staticmethod
     def is_valid_file_name(file_name):
+        if file_name in [".", ".."]:
+            return False
         return all(c.isalnum() or c in ('-', '_', '.') for c in file_name)
 
     @staticmethod
@@ -103,12 +110,12 @@ class LinuxFileManager:
         if not LinuxFileManager.is_valid_directory_name(folder_path):
             raise InvalidDirectoryNameException(folder_path)
 
+        LinuxFileManager.make_directory(folder_path, exist_ok=True)
         real_folder_path = os.path.join(
             LinuxFileManager.base_folder_path(),
             folder_path,
         )
         real_file_path = os.path.join(real_folder_path, file_name)
-        LinuxFileManager.make_directory(real_folder_path, exist_ok=True)
         with open(real_file_path, 'wb') as file:
             file.write(content)
         return LinuxFileManager.get_object_metadata(folder_path)
