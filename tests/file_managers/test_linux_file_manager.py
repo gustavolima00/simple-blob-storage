@@ -84,3 +84,22 @@ def test_get_object_metadata_returns_none_for_nonexistent_file(path, file_name):
         assert False
     except FileDoesNotExistException:
         assert True
+
+@given(valid_directory_names(), valid_file_names(), st.binary())
+def test_get_file_returns_file_content(path, file_name, content):
+    LinuxFileManager.save_file(path, file_name, content)
+    file_path = os.path.join(path, file_name)
+    file_stream, metadata = LinuxFileManager.get_file(file_path)
+    assert file_stream.read() == content
+    assert metadata.name == file_name
+    assert metadata.path == file_path
+    assert metadata.size == len(content)
+    assert metadata.type == 'file'
+
+@given(valid_directory_names(), valid_file_names())
+def test_get_file_raises_exception_for_nonexistent_file(path, file_name):
+    try:
+        LinuxFileManager.get_file(os.path.join(path, file_name))
+        assert False
+    except FileDoesNotExistException:
+        assert True
