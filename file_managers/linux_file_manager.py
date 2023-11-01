@@ -109,16 +109,13 @@ class LinuxFileManager:
             raise InvalidFileNameException(file_name)
         if not LinuxFileManager.is_valid_directory_name(folder_path):
             raise InvalidDirectoryNameException(folder_path)
-
         LinuxFileManager.make_directory(folder_path, exist_ok=True)
-        real_folder_path = os.path.join(
-            LinuxFileManager.base_folder_path(),
-            folder_path,
-        )
-        real_file_path = os.path.join(real_folder_path, file_name)
+        file_path = os.path.join(folder_path, file_name)
+        real_file_path = os.path.join(
+            LinuxFileManager.base_folder_path(), file_path)
         with open(real_file_path, 'wb') as file:
             file.write(content)
-        return LinuxFileManager.get_object_metadata(folder_path)
+        return LinuxFileManager.get_object_metadata(file_path)
 
     @staticmethod
     def get_file(filepath):

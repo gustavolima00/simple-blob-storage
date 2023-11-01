@@ -1,12 +1,9 @@
-import shutil
-import string
-from hypothesis import given
-import hypothesis.strategies as st
 import os
-from file_managers.linux_file_manager import InvalidDirectoryNameException, InvalidFileNameException, LinuxFileManager
-from hypothesis import strategies as st
+import shutil
 import pytest
-
+from hypothesis import given
+from hypothesis import strategies as st
+from file_managers.linux_file_manager import InvalidDirectoryNameException, InvalidFileNameException, LinuxFileManager
 from tests.file_managers.file_manager_test_generator import invalid_directory_names, invalid_file_names, valid_directory_names, valid_file_names
 
 
@@ -39,7 +36,8 @@ def test_make_directory_raises_exception_for_invalid_directory_names(path):
 @given(valid_directory_names(), valid_file_names(), st.binary())
 def test_save_file_creates_file(path, file_name, content):
     object_metadata = LinuxFileManager.save_file(path, file_name, content)
-    full_path = os.path.join(LinuxFileManager.base_folder_path(), path)
+    full_path = os.path.join(
+        LinuxFileManager.base_folder_path(), path, file_name)
     assert os.path.exists(full_path)
     with open(full_path, 'rb') as file:
         assert file.read() == content
