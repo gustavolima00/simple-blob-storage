@@ -1,5 +1,5 @@
 from file_managers.base_file_manager import BaseFileManager
-from models.object import ObjectMetadata
+from models.object_metadata import ObjectMetadata
 import os
 import time
 
@@ -71,18 +71,19 @@ class LinuxFileManager(BaseFileManager):
                 continue
             items.append(object_metadata)
         return items
-    
+
     def save_file(file_path, content, create_folders):
         folder = os.path.join(
             LinuxFileManager.__base_folder_path(),
             os.path.dirname(file_path),
         )
-        print('base_folder_path', LinuxFileManager.__base_folder_path())
-        print('folder', folder)
-        print('file_path', file_path)
+        file_name = os.path.basename(file_path)
+        real_file_path = os.path.join(folder, file_name)
+        file_path = os.path.relpath(
+            real_file_path, LinuxFileManager.__base_folder_path())
         if create_folders:
             LinuxFileManager.make_directory(folder, exist_ok=True)
-        with open(os.path.join(folder, file_path), 'wb') as file:
+        with open(real_file_path, 'wb') as file:
             file.write(content)
         return LinuxFileManager.get_object_metadata(file_path)
 
@@ -90,6 +91,8 @@ class LinuxFileManager(BaseFileManager):
         full_path = os.path.join(
             LinuxFileManager.__base_folder_path(), filepath)
         if not os.path.exists(full_path):
+            raise LinuxFileDoesNotExistException(full_path)
+        if not os.path.isfile(full_path):
             raise LinuxFileDoesNotExistException(full_path)
         content = open(full_path, 'rb')
         metadata = LinuxFileManager.get_object_metadata(filepath)
