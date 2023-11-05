@@ -35,7 +35,7 @@ def test_make_directory_raises_exception_for_invalid_directory_names(path):
 
 @given(valid_directory_names(), valid_file_names(), st.binary())
 def test_save_file_creates_file(path, file_name, content):
-    object_metadata = LinuxFileManager.save_file(path, file_name, content)
+    LinuxFileManager.save_file(path, file_name, content)
     full_path = os.path.join(
         LinuxFileManager.base_folder_path(), path, file_name)
     assert os.path.exists(full_path)

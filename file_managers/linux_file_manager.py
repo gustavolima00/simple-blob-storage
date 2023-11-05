@@ -26,7 +26,14 @@ class InvalidFileNameException(LinuxFileManagerException):
 class LinuxFileManager:
     @staticmethod
     def is_valid_directory_name(directory_name):
-        return all(c.isalnum() or c in ('-', '_') for c in directory_name)
+        folders = directory_name.split('/')
+        if len(folders) > 1 and folders[0] == '':
+            return False
+
+        for folder in folders:
+            if not all(c.isalnum() or c in ('-', '_') for c in folder):
+                return False
+        return True
 
     @staticmethod
     def is_valid_file_name(file_name):
