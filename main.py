@@ -1,7 +1,8 @@
+import os
 from flask import Flask, request, send_file
 from services.file_manager_service import FileManagerService, FileManagerServiceException
 import io
-import os
+from flask_cors import CORS
 
 app = Flask(__name__)
 
@@ -49,4 +50,13 @@ def download_file():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app_port = os.environ.get('APP_PORT', 5000)
+    use_cors = os.environ.get('USE_CORS', 'false').lower() == 'true'
+    print('configuration', {
+        'app_port': app_port,
+        'use_cors': use_cors
+    })
+    if use_cors:
+        print('Using CORS')
+        cors = CORS(app, resources={r"*": {"origins": "*"}})
+    app.run(host='0.0.0.0', port=app_port)
