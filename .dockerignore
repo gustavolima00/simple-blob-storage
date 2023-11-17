@@ -1,0 +1,6 @@
+.vscode/
+.venv/
+.hypothesis/
+.pytest_cache/
+files/
+venv/
